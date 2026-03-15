@@ -1,6 +1,5 @@
 """
 Database session management.
-Provides both async (FastAPI routes) and sync (Alembic migrations) engines.
 """
 from typing import AsyncGenerator
 
@@ -9,15 +8,13 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
 
 from app.core.config import settings
 
 # ── Async Engine (FastAPI) ────────────────────────────────────
 async_engine = create_async_engine(
     settings.async_database_url,
-    echo=settings.ENVIRONMENT == "development",
+    echo=False,
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
@@ -43,11 +40,38 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-# ── Sync Engine (Alembic + seed scripts) ─────────────────────
-sync_engine = create_engine(
-    settings.sync_database_url,
-    echo=False,
-    pool_pre_ping=True,
-)
+# ── Sync Engine (Alembic only - lazy init) ───────────────────
+# Created lazily to avoid localhost connection errors at import time
+_sync_engine = None
+_SyncSessionLocal = None
 
-SyncSessionLocal = sessionmaker(bind=sync_engine, autoflush=False, autocommit=False)
+
+def get_sync_engine():
+    global _sync_engine
+    if _sync_engine is None:
+        from sqlalchemy import create_engine
+        _sync_engine = create_engine(
+            settings.sync_database_url,
+            echo=False,
+            pool_pre_ping=True,
+        )
+    return _sync_engine
+
+
+def get_sync_session():
+    global _SyncSessionLocal
+    if _SyncSessionLocal is None:
+        from sqlalchemy.orm import sessionmaker
+        _SyncSessionLocal = sessionmaker(bind=get_sync_engine(), autoflush=False, autocommit=False)
+    return _SyncSessionLocal
+
+
+# Backward compat aliases
+@property
+def sync_engine():
+    return get_sync_engine()
+
+
+@property  
+def SyncSessionLocal():
+    return get_sync_session()
