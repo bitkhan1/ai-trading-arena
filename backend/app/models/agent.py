@@ -52,11 +52,11 @@ class Agent(Base):
     strategy_type: Mapped[str] = mapped_column(String(100), default="unknown")
     avatar_emoji: Mapped[str] = mapped_column(String(10), default="🤖")
     llm_model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    agent_type: Mapped[str] = mapped_column(
-        sa.String(20), server_default='builtin'
+    agent_type: Mapped[AgentType] = mapped_column(
+        SAEnum(AgentType), default=AgentType.BUILTIN
     )
-    status: Mapped[str] = mapped_column(
-        sa.String(20), server_default='active'
+    status: Mapped[AgentStatus] = mapped_column(
+        SAEnum(AgentStatus), default=AgentStatus.ACTIVE
     )
 
     # Paper trading capital
