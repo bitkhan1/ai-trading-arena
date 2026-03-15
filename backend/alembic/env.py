@@ -1,6 +1,5 @@
 """
 Alembic environment configuration.
-Uses synchronous SQLAlchemy engine for migrations (async not supported by Alembic).
 """
 from logging.config import fileConfig
 
@@ -10,14 +9,16 @@ from alembic import context
 from app.core.config import settings
 from app.db.base import Base
 
-# Import all models so Alembic can detect them
 import app.models  # noqa: F401
 
 config = context.config
 
-# Interpret the config file for Python logging.
+# Only call fileConfig if the ini file has the required sections
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except Exception:
+        pass  # Skip logging config if ini sections are missing
 
 target_metadata = Base.metadata
 
@@ -33,7 +34,6 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=False,
     )
     with context.begin_transaction():
         context.run_migrations()
