@@ -139,7 +139,7 @@ def start_scheduler():
     # Agent trading — every 60 seconds
     scheduler.add_job(
         agent_trade_cycle,
-        trigger=IntervalTrigger(seconds=settings.AGENT_TRADE_INTERVAL),
+        trigger=IntervalTrigger(seconds=settings.AGENT_TRADE_INTERVAL, start_date=__import__("datetime").datetime.now() + __import__("datetime").timedelta(seconds=30)),
         id="agent_trade_cycle",
         replace_existing=True,
         max_instances=1,
@@ -149,7 +149,7 @@ def start_scheduler():
     # Leaderboard WebSocket push — every 10 seconds
     scheduler.add_job(
         leaderboard_update_job,
-        trigger=IntervalTrigger(seconds=settings.LEADERBOARD_UPDATE_INTERVAL),
+        trigger=IntervalTrigger(seconds=settings.LEADERBOARD_UPDATE_INTERVAL, start_date=__import__("datetime").datetime.now() + __import__("datetime").timedelta(seconds=30)),
         id="leaderboard_update",
         replace_existing=True,
         max_instances=1,
