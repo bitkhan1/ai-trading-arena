@@ -3,27 +3,29 @@
 #
 # Services provisioned:
 #   1. arena-db       — PostgreSQL (free tier)
-#   2. arena-redis    — Redis (free tier)
-#   3. arena-backend  — FastAPI web service (Python)
-#   4. arena-frontend — React static site (Vite)
+#   2. arena-redis    — Redis / Key Value (free tier)
+#   3. arena-backend  — FastAPI web service (Python, free tier)
+#   4. arena-frontend — React static site (Vite, no plan needed)
 
 databases:
   - name: arena-db
     databaseName: arena
     user: arena
-    plan: starter
+    plan: free
     region: oregon
 
 services:
   # ─────────────────────────────────────────────
-  # Redis (for leaderboard cache + WebSocket pub/sub)
+  # Redis / Key Value (leaderboard cache + WebSocket pub/sub)
   # ─────────────────────────────────────────────
-  - type: redis
+  - type: keyvalue
     name: arena-redis
-    plan: starter
+    plan: free
     region: oregon
     maxmemoryPolicy: allkeys-lru
-    ipAllowList: []
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
 
   # ─────────────────────────────────────────────
   # Backend — FastAPI
@@ -32,7 +34,7 @@ services:
     name: arena-backend
     runtime: python
     region: oregon
-    plan: starter
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -45,7 +47,7 @@ services:
       - key: REDIS_URL
         fromService:
           name: arena-redis
-          type: redis
+          type: keyvalue
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
@@ -53,20 +55,21 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: "https://arena-frontend.onrender.com"
-      # ─── Add these manually in Render dashboard ───
-      # POLYGON_API_KEY      — free key at polygon.io
-      # OPENAI_API_KEY       — optional, for GPT-4o agents
-      # ANTHROPIC_API_KEY    — optional, for Claude agents
-      # GOOGLE_CLIENT_ID     — optional, for Google OAuth
-      # GOOGLE_CLIENT_SECRET — optional, for Google OAuth
+      - key: POLYGON_API_KEY
+        sync: false
+      # Optional — leave blank if not using LLM agents
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
 
   # ─────────────────────────────────────────────
   # Frontend — React/Vite static site
+  # (static sites do not support plan or region fields)
   # ─────────────────────────────────────────────
   - type: web
     name: arena-frontend
     runtime: static
-    plan: starter
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -77,9 +80,6 @@ services:
       - path: "/*"
         name: X-Content-Type-Options
         value: nosniff
-      - path: "/*"
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
     routes:
       - type: rewrite
         source: "/*"
