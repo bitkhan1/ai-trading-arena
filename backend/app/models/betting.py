@@ -57,7 +57,7 @@ class Bet(Base):
     payout: Mapped[int] = mapped_column(BigInteger, default=0)       # tokens received
 
     status: Mapped[str] = mapped_column(
-        sa.String(30), server_default='PENDING', nullable=False
+        String(30), server_default='PENDING', nullable=False
     )
 
     placed_at: Mapped[datetime] = mapped_column(
@@ -86,7 +86,7 @@ class DailyContest(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     contest_date: Mapped[date] = mapped_column(Date, unique=True, nullable=False, index=True)
     status: Mapped[str] = mapped_column(
-        sa.String(30), server_default='open', nullable=False
+        String(30), server_default='open', nullable=False
     )
 
     # Total tokens bet across all participants
