@@ -1,40 +1,33 @@
-# render.yaml — One-click Render Blueprint for AI Trading Agent Arena
-# Deploy at: https://render.com → New+ → Blueprint → connect your repo
+# render.yaml — AI Trading Agent Arena
+# Deploy: render.com → New+ → Blueprint → connect bitkhan1/ai-trading-arena
 #
-# Services provisioned:
-#   1. arena-db       — PostgreSQL (free tier)
-#   2. arena-redis    — Redis / Key Value (free tier)
-#   3. arena-backend  — FastAPI web service (Python, free tier)
-#   4. arena-frontend — React static site (Vite, no plan needed)
+# Services:
+#   arena-db       PostgreSQL database
+#   arena-redis    Key Value (Redis) instance
+#   arena-backend  FastAPI Python web service
+#   arena-frontend React/Vite static site
 
 databases:
   - name: arena-db
     databaseName: arena
     user: arena
-    plan: free
     region: oregon
 
 services:
-  # ─────────────────────────────────────────────
-  # Redis / Key Value (leaderboard cache + WebSocket pub/sub)
-  # ─────────────────────────────────────────────
+  # ── Key Value (Redis) ──────────────────────────────────────────
   - type: keyvalue
     name: arena-redis
-    plan: free
     region: oregon
     maxmemoryPolicy: allkeys-lru
     ipAllowList:
       - source: 0.0.0.0/0
         description: everywhere
 
-  # ─────────────────────────────────────────────
-  # Backend — FastAPI
-  # ─────────────────────────────────────────────
+  # ── Backend (FastAPI) ──────────────────────────────────────────
   - type: web
     name: arena-backend
     runtime: python
     region: oregon
-    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -57,29 +50,18 @@ services:
         value: "https://arena-frontend.onrender.com"
       - key: POLYGON_API_KEY
         sync: false
-      # Optional — leave blank if not using LLM agents
       - key: OPENAI_API_KEY
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
 
-  # ─────────────────────────────────────────────
-  # Frontend — React/Vite static site
-  # (static sites do not support plan or region fields)
-  # ─────────────────────────────────────────────
+  # ── Frontend (React/Vite static site) ─────────────────────────
   - type: web
     name: arena-frontend
     runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    headers:
-      - path: "/*"
-        name: X-Frame-Options
-        value: DENY
-      - path: "/*"
-        name: X-Content-Type-Options
-        value: nosniff
     routes:
       - type: rewrite
         source: "/*"
