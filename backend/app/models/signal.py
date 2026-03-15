@@ -33,7 +33,7 @@ class Signal(Base):
     )
 
     signal_type: Mapped[str] = mapped_column(
-        sa.String(20), nullable=False, server_default='trade', index=True
+        String(20), nullable=False, server_default='trade', index=True
     )
 
     # Trade fields (for TRADE type)
