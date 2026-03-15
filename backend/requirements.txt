@@ -24,18 +24,13 @@ pydantic==2.10.4
 pydantic-settings==2.7.0
 email-validator==2.2.0
 
-# ── Market Data ───────────────────────────────────────────────
+# ── Market Data (pre-built wheels only — avoid slow C compilation) ──
 yfinance==0.2.50
-polygon-api-client==1.14.2
 pandas==2.2.3
-numpy==2.2.1
+numpy==1.26.4
 
 # ── Task Scheduling ───────────────────────────────────────────
 apscheduler==3.11.0
-
-# ── AI / LLM Clients ─────────────────────────────────────────
-openai==1.60.0
-anthropic==0.42.0
 
 # ── HTTP ──────────────────────────────────────────────────────
 aiohttp==3.11.11
@@ -45,3 +40,11 @@ requests==2.32.3
 python-dotenv==1.0.1
 pytz==2024.2
 slowapi==0.1.9
+
+# ── Optional LLM clients (lazy-imported, won't break if absent) ──
+# openai and anthropic are imported only when API keys are set.
+# Keeping them out of base requirements speeds up cold build by ~3 min.
+# To enable: add them manually in Render dashboard env or uncomment:
+# openai==1.60.0
+# anthropic==0.42.0
+# polygon-api-client==1.14.2
