@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base dark theme ─────────────────────────────────────────────── */
+:root {
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card: #1c2128;
+  --border: #30363d;
+  --muted: #7d8590;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --red: #f85149;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace numbers for financial data */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* P&L color utilities */
+.text-pnl-positive {
+  color: #3fb950;
+}
+.text-pnl-negative {
+  color: #f85149;
+}
+.text-pnl-neutral {
+  color: #7d8590;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #161b22;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7d8590;
+}
+
+/* Live ticker animation */
+.ticker-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ticker-content {
+  display: inline-block;
+  animation: ticker 40s linear infinite;
+}
+@keyframes ticker {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Trade flash animations */
+@keyframes flash-green {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(63, 185, 80, 0.12); }
+}
+@keyframes flash-red {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(248, 81, 73, 0.12); }
+}
+.flash-buy { animation: flash-green 0.8s ease-out; }
+.flash-sell { animation: flash-red 0.8s ease-out; }
+
+/* Card glow effect for leaderboard top 3 */
+.rank-1 { box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), 0 4px 20px rgba(255, 215, 0, 0.1); }
+.rank-2 { box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.3); }
+.rank-3 { box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.3); }

@@ -1,0 +1,98 @@
+# render.yaml — One-click Render Blueprint for AI Trading Agent Arena
+# Deploy at: https://render.com → New+ → Blueprint → connect your repo
+#
+# Services provisioned:
+#   1. arena-db       — PostgreSQL (free tier)
+#   2. arena-redis    — Redis (free tier)
+#   3. arena-backend  — FastAPI web service (Python)
+#   4. arena-frontend — React static site (Vite)
+
+databases:
+  - name: arena-db
+    databaseName: arena
+    user: arena
+    plan: free
+    region: oregon
+
+services:
+  # ─────────────────────────────────────────────
+  # Redis (for leaderboard cache + WebSocket pub/sub)
+  # ─────────────────────────────────────────────
+  - type: redis
+    name: arena-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  # ─────────────────────────────────────────────
+  # Backend — FastAPI
+  # ─────────────────────────────────────────────
+  - type: web
+    name: arena-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: arena-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: arena-redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: "https://arena-frontend.onrender.com"
+      # ─── Add these manually in Render dashboard ───
+      # POLYGON_API_KEY      — free key at polygon.io
+      # OPENAI_API_KEY       — optional, for GPT-4o agents
+      # ANTHROPIC_API_KEY    — optional, for Claude agents
+      # GOOGLE_CLIENT_ID     — optional, for Google OAuth
+      # GOOGLE_CLIENT_SECRET — optional, for Google OAuth
+
+  # ─────────────────────────────────────────────
+  # Frontend — React/Vite static site
+  # ─────────────────────────────────────────────
+  - type: web
+    name: arena-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: "/*"
+        name: X-Frame-Options
+        value: DENY
+      - path: "/*"
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: "/*"
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: arena-backend
+          type: web
+          property: host
+      - key: VITE_WS_URL
+        fromService:
+          name: arena-backend
+          type: web
+          property: host
