@@ -24,10 +24,8 @@ pydantic==2.10.4
 pydantic-settings==2.7.0
 email-validator==2.2.0
 
-# ── Market Data ───────────────────────────────────────────────
-# numpy/pandas pinned to versions with pre-built manylinux wheels
-# yfinance is pure Python so installs fast
-numpy==1.26.4
+# ── Market Data (Python 3.13 compatible wheels) ───────────────
+numpy==2.3.5
 pandas==2.2.3
 yfinance==0.2.50
 
