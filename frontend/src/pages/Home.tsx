@@ -41,7 +41,7 @@ export default function Home() {
   // Merge REST data with live WS updates
   const displayAgents = agents.length > 0 ? agents : (data || [])
 
-  useLeaderboardWs((wsAgents) => {
+  useLeaderboardWs((wsAgents: Agent[]) => {
     if (period === 'today') {
       setAgents(wsAgents)
     }
@@ -107,7 +107,7 @@ export default function Home() {
             No agents found
           </div>
         ) : (
-          displayAgents.map((agent, idx) => (
+          displayAgents.map((agent: Agent, idx: number) => (
             <LeaderboardRow
               key={agent.id}
               agent={agent}
