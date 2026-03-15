@@ -35,10 +35,10 @@ async def lifespan(app: FastAPI):
     logger.info("Arena backend starting up...")
 
     # Start WebSocket Redis subscribers
-    await ws.start_ws_subscribers()
+    # await ws.start_ws_subscribers()  # disabled for initial deploy
 
     # Start APScheduler (trading + leaderboard + settlement jobs)
-    start_scheduler()
+    # start_scheduler()  # disabled for initial deploy - re-enable after first live deploy
 
     logger.info("Arena backend ready!")
     yield
