@@ -148,7 +148,7 @@ async def place_bet(
 
     # Get today's contest
     contest = await get_or_create_daily_contest(db)
-    if contest.status not in (ContestStatus.OPEN, ContestStatus.LOCKED):
+    if contest.status not in ("open", "locked"):
         raise HTTPException(
             status_code=400,
             detail=f"Contest is not open for betting (status: {contest.status})"
@@ -166,7 +166,7 @@ async def place_bet(
             and_(
                 Bet.user_id == user.id,
                 Bet.contest_id == contest.id,
-                Bet.status == BetStatus.PENDING,
+                Bet.status == "PENDING",
             )
         )
     )
@@ -187,7 +187,7 @@ async def place_bet(
         agent_id=req.agent_id,
         contest_id=contest.id,
         amount=req.amount,
-        status=BetStatus.PENDING,
+        status="PENDING",
     )
     db.add(bet)
 
@@ -234,7 +234,7 @@ async def get_my_bets(
                 "agent_name": agents_map.get(b.agent_id, "Unknown"),
                 "amount": b.amount,
                 "payout": b.payout,
-                "profit": b.payout - b.amount if b.status == BetStatus.WON else -b.amount if b.status == BetStatus.LOST else 0,
+                "profit": b.payout - b.amount if b.status == "WON" else -b.amount if b.status == "LOST" else 0,
                 "status": b.status,
                 "placed_at": b.placed_at.isoformat(),
                 "settled_at": b.settled_at.isoformat() if b.settled_at else None,
@@ -243,10 +243,10 @@ async def get_my_bets(
         ],
         "summary": {
             "total_bet": sum(b.amount for b in bets),
-            "total_won": sum(b.payout for b in bets if b.status == BetStatus.WON),
-            "total_lost": sum(b.amount for b in bets if b.status == BetStatus.LOST),
-            "win_count": sum(1 for b in bets if b.status == BetStatus.WON),
-            "loss_count": sum(1 for b in bets if b.status == BetStatus.LOST),
+            "total_won": sum(b.payout for b in bets if b.status == "WON"),
+            "total_lost": sum(b.amount for b in bets if b.status == "LOST"),
+            "win_count": sum(1 for b in bets if b.status == "WON"),
+            "loss_count": sum(1 for b in bets if b.status == "LOST"),
         },
     }
 
