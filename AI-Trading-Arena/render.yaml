@@ -1,11 +1,5 @@
 # render.yaml — AI Trading Agent Arena
 # Deploy: render.com → New+ → Blueprint → connect bitkhan1/ai-trading-arena
-#
-# Services:
-#   arena-db       PostgreSQL database
-#   arena-redis    Key Value (Redis) instance
-#   arena-backend  FastAPI Python web service
-#   arena-frontend React/Vite static site
 
 databases:
   - name: arena-db
@@ -14,7 +8,6 @@ databases:
     region: oregon
 
 services:
-  # ── Key Value (Redis) ──────────────────────────────────────────
   - type: keyvalue
     name: arena-redis
     region: oregon
@@ -23,7 +16,6 @@ services:
       - source: 0.0.0.0/0
         description: everywhere
 
-  # ── Backend (FastAPI) ──────────────────────────────────────────
   - type: web
     name: arena-backend
     runtime: python
@@ -55,7 +47,6 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
-  # ── Frontend (React/Vite static site) ─────────────────────────
   - type: web
     name: arena-frontend
     runtime: static
