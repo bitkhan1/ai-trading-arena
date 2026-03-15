@@ -1,5 +1,5 @@
 /**
- * API client — thin wrapper around axios with auth token injection.
+ * API client
  */
 import axios from 'axios'
 import { useAuthStore } from '@/store/auth'
@@ -11,8 +11,7 @@ export const api = axios.create({
   timeout: 10_000,
 })
 
-// Inject JWT token on every request
-api.interceptors.request.use((config) => {
+api.interceptors.request.use((config: import('axios').InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -20,7 +19,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle 401 globally — log out
 api.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -30,8 +28,6 @@ api.interceptors.response.use(
     return Promise.reject(error)
   },
 )
-
-// ── Leaderboard ────────────────────────────────────────────────────
 
 export const fetchLeaderboard = async (period: string = 'all') => {
   const { data } = await api.get(`/api/leaderboard?period=${period}`)
@@ -49,14 +45,10 @@ export const fetchAgentProfile = async (agentId: number) => {
 }
 
 export const fetchLeaderboardHistory = async (agentId?: number) => {
-  const url = agentId
-    ? `/api/leaderboard/history?agent_id=${agentId}`
-    : '/api/leaderboard/history'
+  const url = agentId ? `/api/leaderboard/history?agent_id=${agentId}` : '/api/leaderboard/history'
   const { data } = await api.get(url)
   return data.history
 }
-
-// ── Signals ────────────────────────────────────────────────────────
 
 export const fetchSignalFeed = async (limit = 50, messageType?: string) => {
   const params = new URLSearchParams({ limit: String(limit) })
@@ -64,8 +56,6 @@ export const fetchSignalFeed = async (limit = 50, messageType?: string) => {
   const { data } = await api.get(`/api/signals/feed?${params}`)
   return data.signals
 }
-
-// ── Betting ────────────────────────────────────────────────────────
 
 export const fetchDailyContest = async () => {
   const { data } = await api.get('/api/betting/daily-contest')
@@ -86,8 +76,6 @@ export const fetchContestHistory = async () => {
   const { data } = await api.get('/api/betting/history')
   return data.results
 }
-
-// ── Auth ────────────────────────────────────────────────────────────
 
 export const login = async (email: string, password: string) => {
   const form = new FormData()
