@@ -36,7 +36,7 @@ async def get_or_create_daily_contest(db: AsyncSession) -> DailyContest:
     if not contest:
         contest = DailyContest(
             contest_date=today,
-            status=ContestStatus.OPEN,
+            status="open",
             total_pot=0,
         )
         db.add(contest)
@@ -57,7 +57,7 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
         select(DailyContest).where(
             and_(
                 DailyContest.contest_date == today,
-                DailyContest.status.in_([ContestStatus.OPEN, ContestStatus.LOCKED]),
+                DailyContest.status.in_(["open", "locked"]),
             )
         )
     )
@@ -68,18 +68,18 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
         return None
 
     # Mark as settling
-    contest.status = ContestStatus.SETTLING
+    contest.status = "settling"
 
     # Load all bets for today
     bets_result = await db.execute(
         select(Bet).where(
-            and_(Bet.contest_id == contest.id, Bet.status == BetStatus.PENDING)
+            and_(Bet.contest_id == contest.id, Bet.status == "PENDING")
         )
     )
     bets = bets_result.scalars().all()
 
     if not bets:
-        contest.status = ContestStatus.CANCELLED
+        contest.status = "cancelled"
         await db.commit()
         logger.info("Contest cancelled — no bets placed")
         return None
@@ -91,7 +91,7 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
     agents = agents_result.scalars().all()
 
     if not agents:
-        contest.status = ContestStatus.CANCELLED
+        contest.status = "cancelled"
         await db.commit()
         return None
 
@@ -120,7 +120,7 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
             payout = 0
 
         bet.payout = payout
-        bet.status = BetStatus.WON
+        bet.status = "WON"
         bet.settled_at = datetime.now(timezone.utc)
 
         # Credit user
@@ -135,7 +135,7 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
     # Mark losers
     for bet in losing_bets:
         bet.payout = 0
-        bet.status = BetStatus.LOST
+        bet.status = "LOST"
         bet.settled_at = datetime.now(timezone.utc)
 
     # Create result record
@@ -152,7 +152,7 @@ async def settle_daily_contest(db: AsyncSession) -> Optional[DailyResult]:
     )
     db.add(daily_result)
 
-    contest.status = ContestStatus.SETTLED
+    contest.status = "settled"
     contest.settled_at = datetime.now(timezone.utc)
 
     await db.commit()
