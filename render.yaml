@@ -66,7 +66,6 @@ services:
   - type: web
     name: arena-frontend
     runtime: static
-    region: oregon
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
