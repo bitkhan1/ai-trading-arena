@@ -1,87 +1,65 @@
-# Active Context: Next.js Starter Template
+# Active Context: AI Trading Agent Arena
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
+**Project Status**: ✅ Complete — AI Trading Agent Arena built and ready to deploy
 
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+A full-stack production-ready web application — "fantasy football for algo trading nerds."
+Based on AI-Traderv2 / HKUDS/AI-Trader architecture (11.7k stars).
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
+- [x] Complete project scaffolding under `AI-Trading-Arena/`
+- [x] README.md with full local setup + Render.com one-click deploy
+- [x] render.yaml (Blueprint for one-click Render deployment)
+- [x] .env.example (all required environment variables)
+- [x] docker-compose.yml (local dev with Postgres + Redis + backend + frontend)
+- [x] Backend: FastAPI (Python 3.12) + SQLAlchemy 2 + Alembic + PostgreSQL
+- [x] Models: User, Agent, AgentPosition, AgentTrade, Bet, DailyContest, DailyResult, Signal, EquitySnapshot
+- [x] Services: market_data (Polygon.io + yfinance fallback), paper_trading, agent_runner (8 strategies), leaderboard, settlement
+- [x] API routes: auth, agents (OpenClaw compatible), signals (AI-Traderv2 compatible), leaderboard, betting, WebSockets
+- [x] APScheduler: agent trade cycle (60s), leaderboard update (10s), market open/close jobs
+- [x] Seed script: 8 built-in agents + admin user + daily contest
+- [x] Frontend: React 18 + Vite + TypeScript + TailwindCSS dark theme
+- [x] Pages: Home (leaderboard), Arena (battle mode), AgentProfile, Betting, Dashboard, Login, Admin
+- [x] Real-time: WebSocket hooks for leaderboard + trade stream
+- [x] OpenClaw skill.md files for all 8 agents
+- [x] Backend Dockerfile + Frontend Dockerfile + nginx.conf
 
-## Current Structure
+## Project Structure
 
-| File/Directory | Purpose | Status |
-|----------------|---------|--------|
-| `src/app/page.tsx` | Home page | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
-
-## Current Focus
-
-The template is ready. Next steps depend on user requirements:
-
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
-
-## Quick Start Guide
-
-### To add a new page:
-
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
+```
+AI-Trading-Arena/
+├── backend/          FastAPI + SQLAlchemy 2 + Alembic
+├── frontend/         React 18 + Vite + TypeScript + TailwindCSS
+├── skills/           OpenClaw skill.md files for all 8 agents
+├── docker-compose.yml
+├── render.yaml       One-click Render Blueprint
+├── .env.example
+└── README.md
 ```
 
-### To add components:
+## Architecture
 
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
+- **Backend**: FastAPI (Python 3.12), SQLAlchemy 2, Alembic, PostgreSQL, Redis (pub/sub + cache)
+- **Frontend**: React 18, Vite, TypeScript, TailwindCSS (dark TradingView theme), Recharts, TanStack Query v5, Zustand
+- **Real-time**: FastAPI WebSockets + Redis pub/sub → fan-out to all clients
+- **Trading**: Paper trading engine with 0.1% slippage, 8 distinct strategies
+- **Betting**: DB-only Arena Token system (fake currency), daily pot settlement at market close
+- **Auth**: JWT + BCrypt + OAuth2 (Google optional)
+- **Deployment**: Render.yaml + Dockerfiles (no config needed beyond env vars)
 
-### To add a database:
+## Key API Compatibility
 
-Follow `.kilocode/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
+Fully compatible with AI-Traderv2 (ai4trade.ai) OpenClaw format:
+- `POST /api/claw/agents/selfRegister`
+- `POST /api/signals/realtime`
+- `GET /api/positions`
+- `WS /ws/leaderboard`
+- `GET /skill.md` (dynamic OpenClaw skill file)
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
+| 2026-03-15 | Built complete AI Trading Agent Arena application from scratch |
