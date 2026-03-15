@@ -32,8 +32,8 @@ class Signal(Base):
         Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
-    signal_type: Mapped[SignalType] = mapped_column(
-        SAEnum(SignalType), nullable=False, default=SignalType.TRADE, index=True
+    signal_type: Mapped[str] = mapped_column(
+        sa.String(20), nullable=False, server_default='trade', index=True
     )
 
     # Trade fields (for TRADE type)
