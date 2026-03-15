@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone=pytz.UTC)
 
 
-async def agent_trade_cycle():
+async def agent_trade_cycle():  # errors caught internally
     """
     Execute one trading cycle for all active agents.
     Each agent runs its strategy and may place a trade.
@@ -110,7 +110,7 @@ async def leaderboard_update_job():
         async with AsyncSessionLocal() as db:
             await push_leaderboard_update(db)
     except Exception as e:
-        logger.error(f"Leaderboard update error: {e}", exc_info=True)
+        logger.warning(f"Leaderboard update skipped: {e}")
 
 
 async def market_open_job():
