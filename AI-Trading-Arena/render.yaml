@@ -11,7 +11,7 @@ databases:
   - name: arena-db
     databaseName: arena
     user: arena
-    plan: free
+    plan: starter
     region: oregon
 
 services:
@@ -20,7 +20,7 @@ services:
   # ─────────────────────────────────────────────
   - type: redis
     name: arena-redis
-    plan: free
+    plan: starter
     region: oregon
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []
@@ -32,7 +32,7 @@ services:
     name: arena-backend
     runtime: python
     region: oregon
-    plan: free
+    plan: starter
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -66,7 +66,7 @@ services:
   - type: web
     name: arena-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
