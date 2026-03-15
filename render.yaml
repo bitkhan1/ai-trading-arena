@@ -21,7 +21,7 @@ services:
     runtime: python
     region: oregon
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --prefer-binary -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -39,7 +39,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: CORS_ORIGINS
-        value: https://arena-frontend.onrender.com
+        value: "https://arena-frontend.onrender.com"
       - key: POLYGON_API_KEY
         sync: false
       - key: OPENAI_API_KEY
@@ -55,7 +55,7 @@ services:
     staticPublishPath: dist
     routes:
       - type: rewrite
-        source: /*
+        source: "/*"
         destination: /index.html
     envVars:
       - key: VITE_API_URL
