@@ -15,8 +15,8 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.security import hash_password, create_access_token
 from app.db.session import AsyncSessionLocal
-from app.models.agent import Agent, AgentType, AgentStatus
-from app.models.betting import DailyContest, ContestStatus
+from app.models.agent import Agent
+from app.models.betting import DailyContest
 from app.models.user import User
 
 logging.basicConfig(level=logging.INFO)
@@ -138,8 +138,8 @@ async def seed():
                 strategy_type=agent_data["strategy_type"],
                 avatar_emoji=agent_data["avatar_emoji"],
                 llm_model=agent_data["llm_model"],
-                agent_type=AgentType.BUILTIN,
-                status=AgentStatus.ACTIVE,
+                agent_type="builtin",
+                status="active",
                 cash=settings.AGENT_STARTING_CAPITAL,
                 starting_capital=settings.AGENT_STARTING_CAPITAL,
                 points=100,
@@ -175,7 +175,7 @@ async def seed():
         if not contest:
             contest = DailyContest(
                 contest_date=today,
-                status=ContestStatus.OPEN,
+                status="open",
                 total_pot=0,
             )
             db.add(contest)
