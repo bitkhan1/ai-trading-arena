@@ -34,74 +34,78 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone=pytz.UTC)
 
 
-async def agent_trade_cycle():  # errors caught internally
+async def agent_trade_cycle():
     """
     Execute one trading cycle for all active agents.
     Each agent runs its strategy and may place a trade.
+    Wrapped in try/except so any DB error logs a warning and never crashes uvicorn.
     """
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(Agent).where(Agent.status == "active")
-        )
-        agents = result.scalars().all()
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Agent).where(Agent.status == "active")
+            )
+            agents = result.scalars().all()
 
-        for agent in agents:
-            try:
-                strategy_fn = STRATEGY_MAP.get(agent.strategy_type)
-                if not strategy_fn:
-                    continue
+            for agent in agents:
+                try:
+                    strategy_fn = STRATEGY_MAP.get(agent.strategy_type)
+                    if not strategy_fn:
+                        continue
 
-                # Get current open position symbols
-                pos_result = await db.execute(
-                    select(AgentPosition).where(
-                        and_(AgentPosition.agent_id == agent.id, AgentPosition.is_open == True)
+                    # Get current open position symbols
+                    pos_result = await db.execute(
+                        select(AgentPosition).where(
+                            and_(AgentPosition.agent_id == agent.id, AgentPosition.is_open == True)
+                        )
                     )
-                )
-                open_positions = pos_result.scalars().all()
-                current_positions = [p.symbol for p in open_positions]
+                    open_positions = pos_result.scalars().all()
+                    current_positions = [p.symbol for p in open_positions]
 
-                # Recompute portfolio value for sizing
-                pos_value = sum(p.quantity * p.current_price for p in open_positions)
-                portfolio_value = agent.cash + pos_value
+                    # Recompute portfolio value for sizing
+                    pos_value = sum(p.quantity * p.current_price for p in open_positions)
+                    portfolio_value = agent.cash + pos_value
 
-                # Run strategy
-                action, symbol, quantity, reasoning = await strategy_fn(
-                    agent.cash, portfolio_value, current_positions
-                )
+                    # Run strategy
+                    action, symbol, quantity, reasoning = await strategy_fn(
+                        agent.cash, portfolio_value, current_positions
+                    )
 
-                if action != "hold" and symbol and quantity > 0:
+                    if action != "hold" and symbol and quantity > 0:
+                        engine = PaperTradingEngine(db)
+                        await engine.execute_trade(
+                            agent=agent,
+                            action=action,
+                            symbol=symbol,
+                            quantity=quantity,
+                            reasoning=reasoning,
+                        )
+
+                    # Update position prices + capture snapshot
                     engine = PaperTradingEngine(db)
-                    await engine.execute_trade(
-                        agent=agent,
-                        action=action,
-                        symbol=symbol,
-                        quantity=quantity,
-                        reasoning=reasoning,
+                    await engine.update_positions_prices(agent)
+
+                    # Compute daily P&L for snapshot
+                    pos_result2 = await db.execute(
+                        select(AgentPosition).where(
+                            and_(AgentPosition.agent_id == agent.id, AgentPosition.is_open == True)
+                        )
                     )
+                    open_pos2 = pos_result2.scalars().all()
+                    pos_val2 = sum(p.quantity * p.current_price for p in open_pos2)
+                    equity = agent.cash + pos_val2
+                    daily_pnl_pct = (equity / agent.starting_capital - 1) * 100
+                    agent.daily_pnl_pct = round(daily_pnl_pct, 4)
+                    agent.total_pnl_pct = round((equity / agent.starting_capital - 1) * 100, 4)
 
-                # Update position prices + capture snapshot
-                engine = PaperTradingEngine(db)
-                await engine.update_positions_prices(agent)
+                    await engine.capture_equity_snapshot(agent, daily_pnl_pct=daily_pnl_pct)
 
-                # Compute daily P&L for snapshot
-                pos_result2 = await db.execute(
-                    select(AgentPosition).where(
-                        and_(AgentPosition.agent_id == agent.id, AgentPosition.is_open == True)
-                    )
-                )
-                open_pos2 = pos_result2.scalars().all()
-                pos_val2 = sum(p.quantity * p.current_price for p in open_pos2)
-                equity = agent.cash + pos_val2
-                daily_pnl_pct = (equity / agent.starting_capital - 1) * 100
-                agent.daily_pnl_pct = round(daily_pnl_pct, 4)
-                agent.total_pnl_pct = round((equity / agent.starting_capital - 1) * 100, 4)
+                except Exception as e:
+                    logger.warning(f"Trade cycle error for agent {agent.name}: {e}")
 
-                await engine.capture_equity_snapshot(agent, daily_pnl_pct=daily_pnl_pct)
-
-            except Exception as e:
-                logger.error(f"Error in trade cycle for agent {agent.name}: {e}", exc_info=True)
-
-        await db.commit()
+            await db.commit()
+    except Exception as e:
+        logger.warning(f"agent_trade_cycle skipped: {e}")
 
 
 async def leaderboard_update_job():
@@ -139,7 +143,7 @@ def start_scheduler():
     # Agent trading — every 60 seconds
     scheduler.add_job(
         agent_trade_cycle,
-        trigger=IntervalTrigger(seconds=settings.AGENT_TRADE_INTERVAL, start_date=__import__("datetime").datetime.now() + __import__("datetime").timedelta(seconds=30)),
+        trigger=IntervalTrigger(seconds=settings.AGENT_TRADE_INTERVAL),
         id="agent_trade_cycle",
         replace_existing=True,
         max_instances=1,
@@ -149,7 +153,7 @@ def start_scheduler():
     # Leaderboard WebSocket push — every 10 seconds
     scheduler.add_job(
         leaderboard_update_job,
-        trigger=IntervalTrigger(seconds=settings.LEADERBOARD_UPDATE_INTERVAL, start_date=__import__("datetime").datetime.now() + __import__("datetime").timedelta(seconds=30)),
+        trigger=IntervalTrigger(seconds=settings.LEADERBOARD_UPDATE_INTERVAL),
         id="leaderboard_update",
         replace_existing=True,
         max_instances=1,
